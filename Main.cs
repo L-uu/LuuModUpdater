@@ -12,60 +12,17 @@ namespace LuuModUpdater
 	{
 		public override void OnApplicationStart()
 		{
-			UpdateMod();
-			UpdateCore();
+			UpdateFunc("LuuMod", "Mods/LuuMod.dll", "https://github.com/L-uu/LuuMod/releases/latest/download/LuuMod.dll");
+			UpdateFunc("ReMod.Core", "ReMod.Core.dll", "https://github.com/RequiDev/ReMod.Core/releases/latest/download/ReMod.Core.dll");
 		}
 
-		public static void UpdateMod()
+		private static void UpdateFunc(string Name, string Path, string URL)
 		{
-			MelonLogger.Msg("Checking for LuuMod and updating if necessary...");
+			MelonLogger.Msg($"Checking for {Name} and updating if necessary...");
 			byte[]? Bytes = null;
-			Bytes = File.ReadAllBytes("Mods/LuuMod.dll");
-			var Wc = new WebClient
+			if (File.Exists($"{Path}"))
 			{
-				Headers =
-				{
-					["User-Agent"] =
-						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36 OPR/85.0.4341.18"
-				}
-			};
-			byte[]? LatestBytes = null;
-			try
-			{
-				LatestBytes = Wc.DownloadData("https://github.com/L-uu/LuuMod/releases/latest/download/LuuMod.dll");
-			}
-			catch (WebException ex)
-			{
-				MelonLogger.Msg("Failed to download LuuMod, you might encounter issues. " + ex.ToString());
-			}
-			if (LatestBytes != null)
-			{
-				var sha256 = SHA256.Create();
-				var LatestHash = ComputeHash(sha256, LatestBytes);
-				var CurrentHash = ComputeHash(sha256, Bytes);
-				if (LatestHash != CurrentHash)
-				{
-					MelonLogger.Msg("Updating LuuMod...");
-					Bytes = LatestBytes;
-					try
-					{
-						File.WriteAllBytes("Mods/LuuMod.dll", Bytes);
-					}
-					catch (IOException ex)
-					{
-						MelonLogger.Warning("Failed to write LuuMod to disk. You might encounter errors. " + ex.ToString());
-					}
-				}
-			}
-		}
-
-		public static void UpdateCore()
-		{
-			MelonLogger.Msg("Checking for ReMod.Core and updating if necessary...");
-			byte[]? Bytes = null;
-			if (File.Exists("ReMod.Core.dll"))
-			{
-				Bytes = File.ReadAllBytes("ReMod.Core.dll");
+				Bytes = File.ReadAllBytes($"{Path}");
 			}
 			var Wc = new WebClient
 			{
@@ -78,28 +35,28 @@ namespace LuuModUpdater
 			byte[]? LatestBytes = null;
 			try
 			{
-				LatestBytes = Wc.DownloadData("https://github.com/RequiDev/ReMod.Core/releases/latest/download/ReMod.Core.dll");
+				LatestBytes = Wc.DownloadData($"{URL}");
 			}
 			catch (WebException ex)
 			{
-				MelonLogger.Msg("Failed to download ReMod.Core, you might encounter issues. " + ex.ToString());
+				MelonLogger.Msg($"Failed to download {Name}, you might encounter issues. " + ex.ToString());
 			}
 			if (Bytes == null)
 			{
 				if (LatestBytes == null)
 				{
-					MelonLogger.Error("Failed to download ReMod.Core, and file doesn't exist. The mod won't work.");
+					MelonLogger.Error($"Failed to download {Name} and the file doesn't exist. The mod won't work.");
 					return;
 				}
-				MelonLogger.Msg("ReMod.Core not found, will try and download now...");
+				MelonLogger.Msg($"{Name} not found, will try and download now...");
 				Bytes = LatestBytes;
 				try
 				{
-					File.WriteAllBytes("ReMod.Core.dll", Bytes);
+					File.WriteAllBytes($"{Path}", Bytes);
 				}
 				catch (IOException ex)
 				{
-					MelonLogger.Warning("Failed to write ReMod.Core to disk, you might encounter issues. " + ex.ToString());
+					MelonLogger.Warning($"Failed to write {Name} to disk, you might encounter issues. " + ex.ToString());
 				}
 			}
 			else
@@ -111,15 +68,15 @@ namespace LuuModUpdater
 					var CurrentHash = ComputeHash(sha256, Bytes);
 					if (LatestHash != CurrentHash)
 					{
-						MelonLogger.Msg("Updating ReMod.Core...");
+						MelonLogger.Msg($"Updating {Name}...");
 						Bytes = LatestBytes;
 						try
 						{
-							File.WriteAllBytes("ReMod.Core.dll", Bytes);
+							File.WriteAllBytes($"{Path}", Bytes);
 						}
 						catch (IOException ex)
 						{
-							MelonLogger.Warning("Failed to write ReMod.Core to disk. You might encounter errors. " + ex.ToString());
+							MelonLogger.Warning($"Failed to write {Name} to disk. You might encounter errors. " + ex.ToString());
 						}
 					}
 				}
@@ -127,9 +84,9 @@ namespace LuuModUpdater
 		}
 
 		// RequiDev/ReModCE/ReModCE.Loader/ReMod.Loader.cs #294
-		private static string ComputeHash(HashAlgorithm sha256, byte[] data)
+		private static string ComputeHash(HashAlgorithm Sha256, byte[] Data)
 		{
-			var Bytes = sha256.ComputeHash(data);
+			var Bytes = Sha256.ComputeHash(Data);
 			var Sb = new StringBuilder();
 			foreach (var b in Bytes)
 			{
